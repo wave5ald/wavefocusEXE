@@ -52,7 +52,7 @@ data class SemVer(
 
         /** Returns null when [raw] is not a valid semantic version. */
         fun parse(raw: String?): SemVer? {
-            val value = raw?.trim().orEmpty()
+            val value = normalize(raw)
             if (value.isEmpty()) return null
             val match = PATTERN.matchEntire(value) ?: return null
             val (major, minor, patch, pre) = match.destructured
@@ -69,6 +69,26 @@ data class SemVer(
             val newer = parse(remote) ?: return false
             val older = parse(current) ?: return false
             return newer > older
+        }
+
+        /** Pads `2.1` / `2` to full `major.minor.patch` form. */
+        fun normalize(raw: String?): String {
+            var value = raw?.trim().orEmpty()
+            if (value.isEmpty()) return value
+            if (value.startsWith("v") || value.startsWith("V")) value = value.substring(1)
+            val suffixIndex = value.indexOfFirst { it == '-' || it == '+' }
+            val core = if (suffixIndex >= 0) value.substring(0, suffixIndex) else value
+            val suffix = if (suffixIndex >= 0) value.substring(suffixIndex) else ""
+            val parts = core.split('.')
+            if (parts.size !in 1..3 || parts.any { it.isEmpty() || it.any { c -> !c.isDigit() } }) {
+                return value
+            }
+            val padded = when (parts.size) {
+                1 -> "${parts[0]}.0.0"
+                2 -> "${parts[0]}.${parts[1]}.0"
+                else -> core
+            }
+            return padded + suffix
         }
     }
 }

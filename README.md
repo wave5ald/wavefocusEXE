@@ -29,18 +29,21 @@ built-in updates.
 
 ## Build
 
-Requires **JDK 21** (needs `jpackage`) and Gradle 8.6+:
+Requires **JDK 21** (needs `jpackage`). The Gradle wrapper is included:
 
 ```bash
-gradle packageExe            # installer: build/compose/binaries/main/exe/WaveFocus-2.1.0.exe
-gradle createDistributable   # portable folder: build/compose/binaries/main/app/WaveFocus
+./gradlew packageExe             # installer: build/compose/binaries/main/exe/WaveFocus-2.1.0.exe
+./gradlew createDistributable    # portable folder: build/compose/binaries/main/app/WaveFocus
 ```
 
-`gradle run` starts the app for development.
+`./gradlew run` starts the app for development.
 
 ## Release
 
 1. Edit `src/main/resources/version.properties` (single version source).
-2. `gradle packageExe`.
-3. Upload the installer to a GitHub release, then run
-   `..\website\tools\publish-update.ps1` with the asset URL.
+2. `./gradlew packageExe`, then rename the installer to
+   `WaveFocus-<version>-Setup.exe`.
+3. Upload `WaveFocus-<version>-Setup.exe` to
+   <https://github.com/wave5ald/wavefocusEXE/releases> (tag `Release`).
+4. Run `..\website\tools\publish-update.cmd` with the asset URL so installed
+   apps see the new version.

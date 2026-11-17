@@ -2023,7 +2023,7 @@ private fun UpdateSettingsSection(
             }
 
             OutlinedButton(
-                onClick = { viewModel.checkForUpdates() },
+                onClick = { viewModel.checkForUpdates(notify = true) },
                 enabled = state !is UpdateState.Checking && state !is UpdateState.Downloading,
                 modifier = Modifier.fillMaxWidth()
             ) {

@@ -505,22 +505,33 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
 
     // --- Auto-update -------------------------------------------------------
 
-    /** Checks the hosted `version.json` for a newer release. */
-    fun checkForUpdates() {
+    /**
+     * Checks the hosted `version.json` for a newer release.
+     *
+     * @param notify when true (manual check) the result is also surfaced as a
+     *   snackbar. Automatic checks stay silent so startup is never noisy.
+     */
+    fun checkForUpdates(notify: Boolean = false) {
         if (_updateState.value is UpdateState.Checking || _updateState.value is UpdateState.Downloading) return
         _updateState.value = UpdateState.Checking
         viewModelScope.launch {
             updateChecker.fetchLatest()
                 .onSuccess { release ->
                     _updateBannerDismissed.value = false
-                    _updateState.value = if (SemVer.isNewer(release.version, appVersion)) {
+                    val newer = SemVer.isNewer(release.version, appVersion)
+                    _updateState.value = if (newer) {
                         UpdateState.Available(release)
                     } else {
                         UpdateState.UpToDate(appVersion)
                     }
+                    if (notify && !newer) {
+                        _userMessage.value = "You're running the latest version ($appVersion)."
+                    }
                 }
                 .onFailure { error ->
-                    _updateState.value = UpdateState.Failed(error.message ?: "Could not reach the update server")
+                    val message = error.message ?: "Could not reach the update server"
+                    _updateState.value = UpdateState.Failed(message)
+                    if (notify) _userMessage.value = "Update check failed: $message"
                 }
         }
     }
@@ -531,6 +542,7 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
         val release = available.release
         if (release.downloadUrl.isBlank()) {
             _updateState.value = UpdateState.Failed("No download link has been published for this release yet.")
+            _userMessage.value = "No download link has been published for this release yet."
             return
         }
         _updateState.value = UpdateState.Downloading(0L, release.sizeBytes)
@@ -546,6 +558,7 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
                 }
             }.onFailure { error ->
                 _updateState.value = UpdateState.Failed(error.message ?: "Download failed. Check your connection.")
+                _userMessage.value = error.message ?: "Update download failed. Check your connection."
             }
         }
     }
