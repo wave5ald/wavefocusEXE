@@ -13,6 +13,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,6 +68,8 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -80,6 +83,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -90,6 +94,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.theme.FlameOrange
 import com.example.ui.theme.FocusIndigo
 import com.example.ui.theme.SuccessGreen
+import com.example.ui.theme.hueColor
+import com.example.ui.theme.hueDegrees
 import com.example.ui.viewmodel.RoutineViewModel
 import com.example.util.RoutineDay
 import com.example.update.UpdateState
@@ -129,6 +135,8 @@ enum class SettingsPage {
 fun BackupSettingsDialog(
     viewModel: RoutineViewModel,
     currentThemeMode: String,
+    currentHue: Float = 0f,
+    onHueChange: (Float) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -191,7 +199,9 @@ fun BackupSettingsDialog(
                     SettingsPage.APPEARANCE -> {
                         AppearanceSettingsPage(
                             currentThemeMode = currentThemeMode,
-                            onThemeSelected = { viewModel.setThemeMode(it) }
+                            currentHue = currentHue,
+                            onThemeSelected = { viewModel.setThemeMode(it) },
+                            onHueChange = onHueChange
                         )
                     }
                     SettingsPage.LANGUAGE -> {
@@ -469,8 +479,15 @@ private fun SettingsMainPage(
 @Composable
 private fun AppearanceSettingsPage(
     currentThemeMode: String,
-    onThemeSelected: (String) -> Unit
+    currentHue: Float,
+    onThemeSelected: (String) -> Unit,
+    onHueChange: (Float) -> Unit
 ) {
+    // The scheme is already shifted, so undo the current offset to find the base hue.
+    val baseHue = ((MaterialTheme.colorScheme.primary.hueDegrees() - currentHue) + 360f) % 360f
+    val accent = hueColor(baseHue + currentHue)
+    val track = remember(baseHue) { (0..36).map { hueColor(baseHue + it * 10f) } }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -510,6 +527,105 @@ private fun AppearanceSettingsPage(
                         selected = isSelected,
                         onClick = { onThemeSelected(mode) }
                     )
+                }
+            }
+        }
+
+        // Single hue slider that repaints every accent in the app.
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("theme_color_card")
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(accent)
+                    )
+                    Text(
+                        text = "Theme color",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = "${currentHue.toInt()}°",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Text(
+                    text = "Slide to repaint every accent, button, ring and highlight across the whole app.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Box(contentAlignment = Alignment.Center) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(12.dp)
+                            .clip(CircleShape)
+                            .background(Brush.horizontalGradient(track))
+                    )
+                    Slider(
+                        value = currentHue,
+                        onValueChange = onHueChange,
+                        valueRange = 0f..360f,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("theme_hue_slider"),
+                        colors = SliderDefaults.colors(
+                            thumbColor = accent,
+                            activeTrackColor = Color.Transparent,
+                            inactiveTrackColor = Color.Transparent,
+                            activeTickColor = Color.Transparent,
+                            inactiveTickColor = Color.Transparent
+                        )
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(350f, 25f, 45f, 160f, 199f, 239f, 271f, 330f).forEach { target ->
+                        val shift = ((target - baseHue) + 360f) % 360f
+                        val selected = kotlin.math.abs(shift - currentHue) < 4f
+                        Box(
+                            modifier = Modifier
+                                .size(26.dp)
+                                .clip(CircleShape)
+                                .background(hueColor(target))
+                                .border(
+                                    width = if (selected) 3.dp else 1.dp,
+                                    color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
+                                    shape = CircleShape
+                                )
+                                .clickable { onHueChange(shift) }
+                                .testTag("theme_hue_preset_${target.toInt()}")
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    TextButton(
+                        onClick = { onHueChange(0f) },
+                        enabled = currentHue > 0.5f
+                    ) {
+                        Text("Reset")
+                    }
                 }
             }
         }

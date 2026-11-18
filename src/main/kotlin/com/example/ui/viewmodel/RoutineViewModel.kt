@@ -204,6 +204,10 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
     private val _themeMode = MutableStateFlow(prefs.getString("theme_mode", "system") ?: "system")
     val themeMode: StateFlow<String> = _themeMode.asStateFlow()
 
+    /** Degrees added to every accent colour (settings theme slider). */
+    private val _themeHue = MutableStateFlow(prefs.getInt("theme_hue", 0).coerceIn(0, 360).toFloat())
+    val themeHue: StateFlow<Float> = _themeHue.asStateFlow()
+
     private val _appLanguage = MutableStateFlow(
         prefs.getString("app_language", null)
             ?: if (java.util.Locale.getDefault().language == "ar") "ar" else "en"
@@ -685,6 +689,13 @@ class RoutineViewModel(application: Application) : AndroidViewModel(application)
     fun setThemeMode(mode: String) {
         _themeMode.value = mode
         prefs.edit().putString("theme_mode", mode).apply()
+    }
+
+    /** Move the theme colour around the hue wheel (0..360 degrees). */
+    fun setThemeHue(degrees: Float) {
+        val clamped = degrees.coerceIn(0f, 360f)
+        _themeHue.value = clamped
+        prefs.edit().putInt("theme_hue", clamped.toInt()).apply()
     }
 
     fun setAppLanguage(lang: String) {

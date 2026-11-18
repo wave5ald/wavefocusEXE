@@ -112,6 +112,7 @@ fun main() = application {
 private fun WaveFocusDesktopApp() {
     val viewModel = remember { RoutineViewModel(DesktopApp.context) }
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val themeHue by viewModel.themeHue.collectAsStateWithLifecycle()
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     val layoutDirection = if (appLanguage == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
 
@@ -119,7 +120,7 @@ private fun WaveFocusDesktopApp() {
         LocalLayoutDirection provides layoutDirection,
         LocalAppLanguage provides appLanguage
     ) {
-        MyApplicationTheme(themeMode = themeMode) {
+        MyApplicationTheme(themeMode = themeMode, hueShift = themeHue) {
             Box(modifier = Modifier.fillMaxSize()) {
                 DailyRoutineApp(viewModel = viewModel, themeMode = themeMode)
                 ToastOverlay()
@@ -209,6 +210,7 @@ fun DailyRoutineApp(
     val userMessage by viewModel.userMessage.collectAsStateWithLifecycle()
     val activeCustomPage by viewModel.activeCustomPage.collectAsStateWithLifecycle()
     val appEdition by viewModel.appEdition.collectAsStateWithLifecycle()
+    val themeHue by viewModel.themeHue.collectAsStateWithLifecycle()
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     val cloudAccount by viewModel.cloudAccount.collectAsStateWithLifecycle()
     val syncState by viewModel.syncState.collectAsStateWithLifecycle()
@@ -342,6 +344,8 @@ fun DailyRoutineApp(
         BackupSettingsDialog(
             viewModel = viewModel,
             currentThemeMode = themeMode,
+            currentHue = themeHue,
+            onHueChange = { viewModel.setThemeHue(it) },
             onDismiss = { showSettingsDialog = false }
         )
     }

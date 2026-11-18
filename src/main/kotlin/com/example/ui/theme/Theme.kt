@@ -72,6 +72,7 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun MyApplicationTheme(
     themeMode: String = "system",
+    hueShift: Float = 0f,
     content: @Composable () -> Unit
 ) {
     val isDark = when (themeMode) {
@@ -80,7 +81,8 @@ fun MyApplicationTheme(
         else -> isSystemInDarkTheme()
     }
 
-    val colorScheme = if (isDark) DarkColorScheme else LightColorScheme
+    // The settings slider rotates every accent colour of the palette.
+    val colorScheme = (if (isDark) DarkColorScheme else LightColorScheme).shiftHue(hueShift)
 
     MaterialTheme(
         colorScheme = colorScheme,
