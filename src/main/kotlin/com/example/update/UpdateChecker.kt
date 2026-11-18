@@ -42,11 +42,11 @@ sealed interface UpdateState {
  * The manifest is intentionally tiny and cache-busted on every check:
  * ```json
  * {
- *   "version": "2.1.0",
- *   "download_url": "https://github.com/<owner>/<repo>/releases/download/v2.1.0/WaveFocus-2.1.0-Setup.exe",
- *   "release_notes": "Bug fixes and improvements",
+ *   "version": "2.2.0",
+ *   "download_url": "https://github.com/<owner>/<repo>/releases/download/Release/WaveFocus-2.2.0-Setup.exe",
+ *   "release_notes": "New theme color slider ...",
  *   "sha256": "optional lowercase hex digest",
- *   "size_bytes": 105406976
+ *   "size_bytes": 105488896
  * }
  * ```
  */

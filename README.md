@@ -1,7 +1,20 @@
-# Wave Focus — Windows (EXE) 2.1
+# Wave Focus - Windows (EXE) 2.2
 
-Kotlin + Compose Desktop routine tracker with optional Google Cloud sync and
-built-in updates.
+Kotlin + Compose Desktop routine tracker with optional Google Cloud sync,
+built-in updates and a user-selectable theme color.
+
+## v2.2 changes
+
+- **Theme color slider** (`ui/theme/Hue.kt`,
+  `ui/screens/BackupSettingsDialog.kt`):
+  - Settings → *Theme & Appearance* gains a **Theme color** card with a hue
+    slider, eight preset swatches and **Reset**.
+  - `Color.shiftHue` / `ColorScheme.shiftHue` rotate the accent palette
+    (primary, secondary, tertiary, soft tints, hero glow) while leaving
+    neutrals untouched, so contrast survives in light and dark mode.
+  - `RoutineViewModel.themeHue` persists the offset as `theme_hue` in the
+    preferences; `MyApplicationTheme(themeMode, hueShift)` applies it app-wide.
+- Version `2.2.0` for the app and the Windows package.
 
 ## v2.1 changes
 
@@ -32,7 +45,7 @@ built-in updates.
 Requires **JDK 21** (needs `jpackage`). The Gradle wrapper is included:
 
 ```bash
-./gradlew packageExe             # installer: build/compose/binaries/main/exe/WaveFocus-2.1.0.exe
+./gradlew packageExe             # installer: build/compose/binaries/main/exe/WaveFocus-2.2.0.exe
 ./gradlew createDistributable    # portable folder: build/compose/binaries/main/app/WaveFocus
 ```
 
@@ -45,5 +58,5 @@ Requires **JDK 21** (needs `jpackage`). The Gradle wrapper is included:
    `WaveFocus-<version>-Setup.exe`.
 3. Upload `WaveFocus-<version>-Setup.exe` to
    <https://github.com/wave5ald/wavefocusEXE/releases> (tag `Release`).
-4. Run `..\website\tools\publish-update.cmd` with the asset URL so installed
-   apps see the new version.
+4. Run `tools/publish-update.ps1` with the asset URL (see the root README) so
+   installed 2.x apps see the new version on their next launch or manual check.
